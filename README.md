@@ -47,3 +47,11 @@ npm run preview
 Use the public HTTPS GitHub Pages URL in Chrome or Microsoft Edge. iOS/iPadOS Safari does not support this Web Bluetooth workflow.
 
 For the first physical test, use an empty hopper, stand clear of the outlet and wheels, and keep the robot power switch or remote within reach.
+
+## Version 1.2
+
+- Failed or cancelled Bluetooth connections now reset cleanly without a page refresh.
+- Bluetooth connection, mock robot, diagnostics and log controls moved to the Settings tab.
+- Imports now retain the three protected basic drills.
+- New Delete imported drills button removes imported/custom drills and the cached last import, while retaining the three basics.
+- Header controls have fixed heights to prevent the full-screen stretched-button layout.

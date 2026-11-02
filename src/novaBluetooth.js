@@ -18,5 +18,6 @@ export class NovaBluetooth{
  async start(d){if(!this.authenticated)throw Error('Connect the robot first');const p=this.packet(d);await this.write(p);this.emit('started',`Sent and started “${d.name}” · ${d.balls.length} balls · ${p.length} bytes`)}
  async control(c,n){if(!this.authenticated)throw Error('Connect the robot first');await this.write(bytes(0x80,1,0,c));this.emit(n,n)}
  pause(){return this.control(2,'paused')}resume(){return this.control(3,'resumed')}stop(){return this.control(1,'stopped')}
- disconnected(){clearInterval(this.keepalive);this.authenticated=false;this.writeChar=null;this.notifyChar=null;this.emit('disconnected','Robot disconnected')}
+ disconnected(){clearInterval(this.keepalive);this.authenticated=false;this.mock=false;this.writeChar=null;this.notifyChar=null;this.emit('disconnected','Robot disconnected')}
+ async reset(){clearInterval(this.keepalive);this.waiters=[];this.authenticated=false;this.mock=false;try{if(this.notifyChar)this.notifyChar.removeEventListener('characteristicvaluechanged',this.notification)}catch{}try{if(this.device?.gatt?.connected)this.device.gatt.disconnect()}catch{}this.device=null;this.writeChar=null;this.notifyChar=null}
 }

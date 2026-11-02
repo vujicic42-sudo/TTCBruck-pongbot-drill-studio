@@ -36,3 +36,14 @@ npm run preview
 ## CSV columns
 
 `Set;Ball;Name;Speed;Spin;Type;Height;Drop;BPM;Reps`
+
+## Version 1.1 Bluetooth controls
+
+- Experimental Web Bluetooth connection and Nova authentication handshake.
+- Send and start the selected drill on the robot.
+- Pause, resume, stop and 10-second idle keepalive commands.
+- Mock robot and Bluetooth diagnostics for tests without hardware.
+
+Use the public HTTPS GitHub Pages URL in Chrome or Microsoft Edge. iOS/iPadOS Safari does not support this Web Bluetooth workflow.
+
+For the first physical test, use an empty hopper, stand clear of the outlet and wheels, and keep the robot power switch or remote within reach.

@@ -80,6 +80,11 @@ export class NovaBluetooth {
 
   notification(data) {
     this.emit('rx', hex(data));
+    // Nova reports completion of the current drill batch with this exact message.
+    // The app uses it to resend the selected drill while the session timer is active.
+    if (hex(data).toLowerCase().replaceAll(' ', '').includes('00020300050100')) {
+      this.emit('drillDone', 'Robot completed the current drill batch');
+    }
     const waiter = this.waiters.shift();
     if (waiter) {
       clearTimeout(waiter.timer);

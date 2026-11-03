@@ -175,8 +175,25 @@ export class NovaBluetooth {
   packet(drill) {
     if (!drill?.balls?.length) throw new Error('No balls');
     if (drill.balls.length > 20) throw new Error('Maximum 20 balls');
-    const payload = drill.balls.flatMap(ball => [...this.pack(ball)]);
-    return bytes(0x81, 4 + payload.length, drill.level === 'ANF' ? 0 : 2, 3, 0, 0, 0, payload);
+
+    // Match Olanga's verified Nova packet structure exactly:
+    // 0x81 | uint16(payload length + 4, LE) | 0x01 | uint16(1, LE) | 0x00
+    // followed by one 24-byte record per ball.
+    const payloadLength = drill.balls.length * 24;
+    const packet = new Uint8Array(7 + payloadLength);
+    const view = new DataView(packet.buffer);
+    view.setUint8(0, 0x81);
+    view.setUint16(1, 4 + payloadLength, true);
+    view.setUint8(3, 1);
+    view.setUint16(4, 1, true);
+    view.setUint8(6, 0);
+
+    let offset = 7;
+    for (const ball of drill.balls) {
+      packet.set(this.pack(ball), offset);
+      offset += 24;
+    }
+    return packet;
   }
 
   async start(drill) {

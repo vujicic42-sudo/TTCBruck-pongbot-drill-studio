@@ -3,3 +3,8 @@
 .head .langActive{background:#facc15!important;color:#111827!important;border-color:#fde047!important;font-weight:800;box-shadow:0 0 0 2px #facc1533}
 .sessionControls,.settingsButtons{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.sessionControls button,.settingsButtons button{flex:1;min-width:145px}.timerHint{color:#94a3b8;font-size:12px}.form label{min-width:0}.form label input,.form label select{margin-top:5px}.form{grid-template-columns:repeat(4,minmax(145px,1fr))}
 @media(max-width:1100px){.form{grid-template-columns:repeat(2,minmax(150px,1fr))}}@media(max-width:600px){.form{grid-template-columns:1fr}.sessionControls button,.settingsButtons button{width:100%}}
+/* v1.8 consistent active states and fixed-height drill library */
+.head .active,.filters .active,.tabs .active,.item.selected,.sessionControls .active{background:#bef264!important;color:#07111f!important;border-color:#bef264!important;font-weight:800;box-shadow:0 0 0 2px #bef2642e}
+.head .langActive{background:#bef264!important;color:#07111f!important;border-color:#bef264!important}
+.drillList{display:flex;flex-direction:column;gap:8px;max-height:52vh;min-height:180px;overflow-y:auto;overscroll-behavior:contain;padding-right:5px;scrollbar-gutter:stable}.drillList .item{flex:0 0 auto;width:100%}.drillList .item.selected em{color:#07111f}.lastImportCard small{display:block;margin:-4px 0 12px;color:#94a3b8}.restoreButton{width:100%;margin-top:8px}.emptyImport{color:#94a3b8}.sessionControls .primary{background:#bef264!important;color:#07111f!important}
+@media(max-width:900px){.drillList{max-height:36vh}}

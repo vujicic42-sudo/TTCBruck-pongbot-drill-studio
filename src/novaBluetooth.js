@@ -177,20 +177,21 @@ export class NovaBluetooth {
     return new Uint8Array(buffer);
   }
 
-  packet(drill) {
+  packet(drill, durationMinutes = 1) {
     if (!drill?.balls?.length) throw new Error('No balls');
     if (drill.balls.length > 20) throw new Error('Maximum 20 balls');
 
-    // Match Olanga's verified Nova packet structure exactly:
-    // 0x81 | uint16(payload length + 4, LE) | 0x01 | uint16(1, LE) | 0x00
-    // followed by one 24-byte record per ball.
+    // Nova timed NEW_DRILL packet. Keep the proven 7-byte layout,
+    // but switch mode from combo-count (1) to timed (0) and pass
+    // the selected Team-session duration as the mode value.
+    const minutes = Math.max(1, Math.min(10, Math.round(Number(durationMinutes) || 1)));
     const payloadLength = drill.balls.length * 24;
     const packet = new Uint8Array(7 + payloadLength);
     const view = new DataView(packet.buffer);
     view.setUint8(0, 0x81);
     view.setUint16(1, 4 + payloadLength, true);
-    view.setUint8(3, 1);
-    view.setUint16(4, 1, true);
+    view.setUint8(3, 0x00);
+    view.setUint16(4, minutes, true);
     view.setUint8(6, 0);
 
     let offset = 7;
@@ -201,10 +202,11 @@ export class NovaBluetooth {
     return packet;
   }
 
-  async start(drill) {
+  async start(drill, durationMinutes = 1) {
     if (!this.authenticated) throw new Error('Connect robot first');
-    await this.write(this.packet(drill));
-    this.emit('started', `Started ${drill.name}`);
+    const minutes = Math.max(1, Math.min(10, Math.round(Number(durationMinutes) || 1)));
+    await this.write(this.packet(drill, minutes));
+    this.emit('started', `Started ${drill.name} for ${minutes} minute(s)`);
   }
 
   control(command, eventName) {

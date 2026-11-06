@@ -177,36 +177,34 @@ export class NovaBluetooth {
     return new Uint8Array(buffer);
   }
 
-  packet(drill, durationMinutes = 1) {
+  packet(drill, options = { mode: 'time', minutes: 1 }) {
     if (!drill?.balls?.length) throw new Error('No balls');
-    if (drill.balls.length > 20) throw new Error('Maximum 20 balls');
-
-    // Nova timed NEW_DRILL packet. Keep the proven 7-byte layout,
-    // but switch mode from combo-count (1) to timed (0) and pass
-    // the selected Team-session duration as the mode value.
-    const minutes = Math.max(1, Math.min(10, Math.round(Number(durationMinutes) || 1)));
-    const payloadLength = drill.balls.length * 24;
-    const packet = new Uint8Array(7 + payloadLength);
-    const view = new DataView(packet.buffer);
-    view.setUint8(0, 0x81);
-    view.setUint16(1, 4 + payloadLength, true);
-    view.setUint8(3, 0x00);
-    view.setUint16(4, minutes, true);
-    view.setUint8(6, 0);
-
-    let offset = 7;
-    for (const ball of drill.balls) {
-      packet.set(this.pack(ball), offset);
-      offset += 24;
+    if (drill.balls.length > 5) throw new Error('Maximum 5 balls per drill');
+    const mode = options?.mode === 'balls' ? 'balls' : 'time';
+    let packetBalls = drill.balls.map(ball => ({ ...ball }));
+    let modeByte, modeValue;
+    if (mode === 'balls') {
+      const target = Math.max(1, Math.min(999, Math.round(Number(options.ballCount) || 1)));
+      const baseReps = Math.floor(target / packetBalls.length);
+      let remainder = target % packetBalls.length;
+      packetBalls = packetBalls.map(ball => ({ ...ball, reps: baseReps + (remainder-- > 0 ? 1 : 0) }));
+      modeByte = 0x01; modeValue = 1;
+    } else {
+      modeByte = 0x00; modeValue = Math.max(1, Math.min(10, Math.round(Number(options.minutes) || 1)));
     }
+    const payloadLength = packetBalls.length * 24;
+    const packet = new Uint8Array(7 + payloadLength), view = new DataView(packet.buffer);
+    view.setUint8(0, 0x81); view.setUint16(1, 4 + payloadLength, true); view.setUint8(3, modeByte); view.setUint16(4, modeValue, true); view.setUint8(6, 0);
+    let offset = 7; for (const ball of packetBalls) { packet.set(this.pack(ball), offset); offset += 24; }
     return packet;
   }
 
-  async start(drill, durationMinutes = 1) {
+  async start(drill, options = { mode: 'time', minutes: 1 }) {
     if (!this.authenticated) throw new Error('Connect robot first');
-    const minutes = Math.max(1, Math.min(10, Math.round(Number(durationMinutes) || 1)));
-    await this.write(this.packet(drill, minutes));
-    this.emit('started', `Started ${drill.name} for ${minutes} minute(s)`);
+    const mode = options?.mode === 'balls' ? 'balls' : 'time';
+    await this.write(this.packet(drill, options));
+    const detail = mode === 'balls' ? `${Math.max(1, Math.min(999, Math.round(Number(options.ballCount) || 1)))} balls` : `${Math.max(1, Math.min(10, Math.round(Number(options.minutes) || 1)))} minute(s)`;
+    this.emit('started', `Started ${drill.name} for ${detail}`);
   }
 
   control(command, eventName) {

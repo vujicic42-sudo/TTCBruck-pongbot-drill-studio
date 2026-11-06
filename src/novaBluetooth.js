@@ -184,11 +184,14 @@ export class NovaBluetooth {
     let packetBalls = drill.balls.map(ball => ({ ...ball }));
     let modeByte, modeValue;
     if (mode === 'balls') {
-      const target = Math.max(1, Math.min(999, Math.round(Number(options.ballCount) || 1)));
-      const baseReps = Math.floor(target / packetBalls.length);
-      let remainder = target % packetBalls.length;
-      packetBalls = packetBalls.map(ball => ({ ...ball, reps: baseReps + (remainder-- > 0 ? 1 : 0) }));
-      modeByte = 0x01; modeValue = 1;
+      // Preserve the drill flow by keeping every row at one repetition and
+      // repeating the complete combination. Per-row repetitions would group
+      // identical balls (A A A ... B B B), which breaks the intended A-B flow.
+      const requested = Math.max(1, Math.min(999, Math.round(Number(options.ballCount) || 1)));
+      const cycles = Math.max(1, Math.ceil(requested / packetBalls.length));
+      packetBalls = packetBalls.map(ball => ({ ...ball, reps: 1 }));
+      modeByte = 0x01;
+      modeValue = cycles;
     } else {
       modeByte = 0x00; modeValue = Math.max(1, Math.min(10, Math.round(Number(options.minutes) || 1)));
     }
@@ -203,7 +206,9 @@ export class NovaBluetooth {
     if (!this.authenticated) throw new Error('Connect robot first');
     const mode = options?.mode === 'balls' ? 'balls' : 'time';
     await this.write(this.packet(drill, options));
-    const detail = mode === 'balls' ? `${Math.max(1, Math.min(999, Math.round(Number(options.ballCount) || 1)))} balls` : `${Math.max(1, Math.min(10, Math.round(Number(options.minutes) || 1)))} minute(s)`;
+    const requested = Math.max(1, Math.min(999, Math.round(Number(options.ballCount) || 1)));
+    const actualBalls = Math.max(1, Math.ceil(requested / drill.balls.length)) * drill.balls.length;
+    const detail = mode === 'balls' ? `${actualBalls} balls in sequence (${Math.ceil(requested / drill.balls.length)} cycle(s))` : `${Math.max(1, Math.min(10, Math.round(Number(options.minutes) || 1)))} minute(s)`;
     this.emit('started', `Started ${drill.name} for ${detail}`);
   }
 
